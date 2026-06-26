@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IDP-Invoices · Sign Up</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+
+<nav>
+  <a href="#" class="logo">
+    <div class="logo-icon">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+        <rect x="2" y="1" width="10" height="13" rx="1.5" stroke="white" stroke-width="1.4"/>
+        <path d="M5 5h4M5 7.5h4M5 10h2" stroke="white" stroke-width="1.2" stroke-linecap="round"/>
+        <circle cx="13.5" cy="13.5" r="3" fill="#93C5FD" stroke="white" stroke-width="1"/>
+        <path d="M12.5 13.5h2M13.5 12.5v2" stroke="white" stroke-width="1" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <span class="logo-name">IDP<span>-Invoices</span></span>
+  </a>
+  <a href="/signin" class="action">Already have an account? Sign in →</a>
+</nav>
+
+<main>
+  <div class="form-card">
+    <h1 class="form-title">Create your account</h1>
+
+    <div class="toggle-wrap" role="group" aria-label="Account type">
+      <button type="button" class="toggle-btn active" id="btn-individual" onclick="switchType('individual')">Individual</button>
+      <button type="button" class="toggle-btn" id="btn-enterprise" onclick="switchType('enterprise')">Enterprise</button>
+    </div>
+
+    {% if error %}
+    <div class="server-error">{{ error }}</div>
+    {% endif %}
+
+    <form method="POST" action="/" id="signup-form">
+
+      <input type="hidden" name="user_type" id="user_type" value="Individual" />
+
+      <!-- Individual fields -->
+      <div id="form-individual">
+        <div class="field-row">
+          <div class="field">
+            <label for="i-fname">First name</label>
+            <input type="text" id="i-fname" name="fname" placeholder="Alex" autocomplete="given-name" />
+          </div>
+          <div class="field">
+            <label for="i-lname">Last name</label>
+            <input type="text" id="i-lname" name="lname" placeholder="Chen" autocomplete="family-name" />
+          </div>
+        </div>
+        <div class="field">
+          <label for="i-email">Email</label>
+          <input type="email" id="i-email" name="email" placeholder="alex@example.com" autocomplete="email" />
+        </div>
+        <div class="field">
+          <label for="i-password">Password</label>
+          <input type="password" id="i-password" name="password" placeholder="8+ characters" autocomplete="new-password" />
+        </div>
+        <div class="field">
+          <label for="i-confirm">Confirm password</label>
+          <input type="password" id="i-confirm" name="confirm_password" placeholder="Re-enter password" autocomplete="new-password" />
+          <span class="field-error" id="i-error">Passwords do not match.</span>
+        </div>
+      </div>
+
+      <!-- Enterprise fields -->
+      <div id="form-enterprise" style="display:none;">
+        <div class="field-row">
+          <div class="field">
+            <label for="e-fname">First name</label>
+            <input type="text" id="e-fname" name="fname" placeholder="Alex" autocomplete="given-name" />
+          </div>
+          <div class="field">
+            <label for="e-lname">Last name</label>
+            <input type="text" id="e-lname" name="lname" placeholder="Chen" autocomplete="family-name" />
+          </div>
+        </div>
+        <div class="field">
+          <label for="e-email">Work email</label>
+          <input type="email" id="e-email" name="email" placeholder="alex@company.com" autocomplete="email" />
+        </div>
+        <div class="field">
+          <label for="e-role">Role</label>
+          <select id="e-role" name="role">
+            <option value="" disabled selected>Select your role</option>
+            <option>CFO / Finance Director</option>
+            <option>Finance Manager</option>
+            <option>Accounts Payable</option>
+            <option>Accounting / Bookkeeping</option>
+            <option>IT / Operations</option>
+            <option>Developer / Engineer</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="e-password">Password</label>
+          <input type="password" id="e-password" name="password" placeholder="8+ characters" autocomplete="new-password" />
+        </div>
+        <div class="field">
+          <label for="e-confirm">Confirm password</label>
+          <input type="password" id="e-confirm" name="confirm_password" placeholder="Re-enter password" autocomplete="new-password" />
+          <span class="field-error" id="e-error">Passwords do not match.</span>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-primary" id="submit-btn">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path d="M2 8h12M9 4l5 4-5 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Create account
+      </button>
+
+    </form>
+
+    <p class="terms">
+      By signing up you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+    </p>
+  </div>
+</main>
+
+<footer>
+  <span>© 2024 IDP-Invoices, Inc.</span>
+  <div>
+    <a href="#">Privacy</a>
+    <a href="#">Security</a>
+    <a href="#">Docs</a>
+    <a href="#">Support</a>
+  </div>
+</footer>
+
+<script>
+  function switchType(type) {
+    const isInd = type === 'individual';
+    document.getElementById('form-individual').style.display = isInd ? '' : 'none';
+    document.getElementById('form-enterprise').style.display = isInd ? 'none' : '';
+    document.getElementById('btn-individual').classList.toggle('active', isInd);
+    document.getElementById('btn-enterprise').classList.toggle('active', !isInd);
+
+    // Capitalize to match DB constraint: 'Individual' | 'Enterprise'
+    document.getElementById('user_type').value = type.charAt(0).toUpperCase() + type.slice(1);
+
+    clearError('i'); clearError('e');
+    setInputsDisabled('form-individual', !isInd);
+    setInputsDisabled('form-enterprise', isInd);
+  }
+
+  function setInputsDisabled(formId, disabled) {
+    document.querySelectorAll(`#${formId} input, #${formId} select`).forEach(el => {
+      el.disabled = disabled;
+    });
+  }
+
+  // Disable enterprise inputs on page load
+  setInputsDisabled('form-enterprise', true);
+
+  function clearError(prefix) {
+    document.getElementById(prefix + '-confirm').classList.remove('input-error');
+    document.getElementById(prefix + '-error').classList.remove('visible');
+  }
+
+  function validatePasswords(prefix) {
+    const pw      = document.getElementById(prefix + '-password').value;
+    const confirm = document.getElementById(prefix + '-confirm').value;
+    const input   = document.getElementById(prefix + '-confirm');
+    const error   = document.getElementById(prefix + '-error');
+
+    if (confirm && pw !== confirm) {
+      input.classList.add('input-error');
+      error.classList.add('visible');
+      return false;
+    } else {
+      input.classList.remove('input-error');
+      error.classList.remove('visible');
+      return true;
+    }
+  }
+
+  ['i', 'e'].forEach(prefix => {
+    document.getElementById(prefix + '-confirm').addEventListener('input', () => {
+      validatePasswords(prefix);
+    });
+    document.getElementById(prefix + '-password').addEventListener('input', () => {
+      if (document.getElementById(prefix + '-confirm').value) {
+        validatePasswords(prefix);
+      }
+    });
+  });
+
+  document.getElementById('signup-form').addEventListener('submit', (e) => {
+    const isInd = document.getElementById('form-individual').style.display !== 'none';
+    const prefix = isInd ? 'i' : 'e';
+    if (!validatePasswords(prefix)) {
+      e.preventDefault();
+    }
+  });
+
+  {% if error %}
+  const activePrefix = document.getElementById('user_type').value === 'Enterprise' ? 'e' : 'i';
+  document.getElementById(activePrefix + '-confirm').classList.add('input-error');
+  document.getElementById(activePrefix + '-error').classList.add('visible');
+  {% endif %}
+</script>
+
+</body>
+</html>
