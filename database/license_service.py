@@ -122,6 +122,58 @@ def create_user_license(
     return payload, out_path
 
 
+def get_user_profile(user_id: int) -> dict:
+    """
+    Returns a dict with:
+      - fname: str
+      - plan: str | None        (monthly / yearly / quota / onetime or None)
+      - expiry_date: date | None
+      - quota: int | None
+      - is_active: bool
+    """
+    conn = db_connection.DatabaseConnection.get_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT f_name FROM users WHERE user_id = %s;", (user_id,))
+        user_row = cursor.fetchone()
+        fname = user_row[0] if user_row else ""
+
+        cursor.execute(
+            """
+            SELECT plan, expiry_date, quota
+            FROM clients_licenses
+            WHERE email = (SELECT email FROM users WHERE user_id = %s)
+            ORDER BY issue_date DESC
+            LIMIT 1
+            """,
+            (user_id,),
+        )
+        lic_row = cursor.fetchone()
+
+        if lic_row is None:
+            return {"fname": fname, "plan": None, "expiry_date": None, "quota": None, "is_active": False}
+
+        plan, expiry_date, quota = lic_row
+
+        if isinstance(expiry_date, str):
+            expiry_date = date.fromisoformat(expiry_date)
+        elif isinstance(expiry_date, datetime):
+            expiry_date = expiry_date.date()
+
+        is_active = expiry_date >= date.today() if expiry_date else False
+
+        return {
+            "fname": fname,
+            "plan": plan,
+            "expiry_date": expiry_date,
+            "quota": quota,
+            "is_active": is_active,
+        }
+    finally:
+        cursor.close()
+        conn.close()
+
+
 def latest_license_retrival(email: str) -> Path:
     conn = db_connection.DatabaseConnection.get_connection()
     cursor = conn.cursor()

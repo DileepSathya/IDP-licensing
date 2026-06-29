@@ -76,8 +76,8 @@
   <!-- Profile -->
   <div class="nav-item nav-profile">
     <button class="profile-btn" id="profile-btn" onclick="toggleDropdown('profile')">
-      <div class="profile-avatar">D</div>
-      <span class="profile-name">Dileep</span>
+      <div class="profile-avatar">{{ profile.fname[0] | upper if profile and profile.fname else '?' }}</div>
+      <span class="profile-name">{{ profile.fname if profile else '' }}</span>
       <svg class="chevron" width="12" height="12" viewBox="0 0 12 12" fill="none" style="margin-left:2px;">
         <path d="M2 4l4 4 4-4" stroke="var(--ink-faint)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
@@ -86,22 +86,35 @@
     <div class="dropdown profile-dropdown" id="profile-dropdown">
       <div class="plan-card">
         <div class="plan-card-title">Your Plan</div>
+        {% if profile and profile.plan %}
         <div class="plan-row">
           <span>Plan</span>
-          <span class="plan-badge">Enterprise</span>
+          <span class="plan-badge">{{ profile.plan | capitalize }}</span>
         </div>
+        {% if profile.plan == 'quota' %}
         <div class="plan-row">
-          <span>Invoices used</span>
-          <strong>1,248 / 5,000</strong>
+          <span>Invoices allocated</span>
+          <strong>{{ profile.quota if profile.quota else 0 }}</strong>
         </div>
+        {% else %}
         <div class="plan-row">
-          <span>Renews</span>
-          <strong>Aug 1, 2026</strong>
+          <span>Expires</span>
+          <strong>{{ profile.expiry_date.strftime('%b %d, %Y').replace(' 0', ' ') if profile.expiry_date else '—' }}</strong>
         </div>
+        {% endif %}
         <div class="plan-row">
           <span>Status</span>
+          {% if profile.is_active %}
           <strong style="color:#059669;">Active</strong>
+          {% else %}
+          <strong style="color:#DC2626;">Inactive</strong>
+          {% endif %}
         </div>
+        {% else %}
+        <div class="plan-row">
+          <span>No active plan</span>
+        </div>
+        {% endif %}
       </div>
 
       <div class="dropdown-divider"></div>
