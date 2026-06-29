@@ -20,6 +20,17 @@ app = Flask(__name__)
 app.secret_key = "your-secret-key"
 
 
+@app.context_processor
+def inject_profile():
+    user_id = session.get("user_id")
+    if user_id:
+        try:
+            return {"profile": license_service.get_user_profile(user_id)}
+        except Exception:
+            pass
+    return {"profile": None}
+
+
 def get_fingerprint_tool_path() -> Path:
     rel_path = os.getenv("finger_print_path", "downloadable/fingerprint_tool.exe")
     file_path = Path(rel_path)
@@ -124,7 +135,12 @@ def signin():
 
 @app.route("/dashboard")
 def dashboard():
-    return render_template("dashboard.html")
+    user_id = session.get("user_id")
+    if not user_id:
+        return redirect(url_for("signin"))
+
+    profile = license_service.get_user_profile(user_id)
+    return render_template("dashboard.html", profile=profile)
 
 @app.route("/licence", methods=["GET", "POST"])
 def generate_license():
@@ -201,6 +217,16 @@ def latest_license():
         logger.exception(f"Unexpected error retrieving latest licence: {e}")
         session["licence_error"] = "Something went wrong. Please try again."
         return redirect(url_for("generate_license"))
+    
+
+
+@app.route('/docs')
+def documentation():
+    return render_template("docs.html")
+
+@app.route('/signout')
+def signout():
+    return render_template("signin.html")
 
 
 """if __name__ == "__main__":
