@@ -32,15 +32,16 @@ def inject_profile():
 
 
 def get_fingerprint_tool_path() -> Path:
-    rel_path = os.getenv("finger_print_path", "downloadable/fingerprint_tool.exe")
+    rel_path = os.getenv("finger_print_path")
     file_path = Path(rel_path)
     if not file_path.is_absolute():
         file_path = Path(__file__).parent / file_path
     return file_path.resolve()
 
 
-@app.route("/download/fingerprint-tool")
+@app.route("/download/app")
 def download_fingerprint_tool():
+
     file_path = get_fingerprint_tool_path()
     if not file_path.is_file():
         logger.error(f"Fingerprint tool not found at: {file_path}")
@@ -227,6 +228,7 @@ def documentation():
 @app.route('/signout')
 def signout():
     return render_template("signin.html")
+
 
 
 """if __name__ == "__main__":
