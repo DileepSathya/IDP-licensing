@@ -2,7 +2,7 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 
 from database import db_connection
-from keygen.license_generator import generate_license_file
+from keygen.license_generator import generate_license_file, normalize_fingerprint
 from __init__ import get_logger
 
 logger = get_logger(__name__)
@@ -87,8 +87,7 @@ def create_user_license(
     plan: str,
     quota: int | None = None,
 ) -> tuple[dict, Path]:
-    if not fingerprint_id or not fingerprint_id.strip():
-        raise ValueError("Fingerprint ID is required.")
+    fingerprint_id = normalize_fingerprint(fingerprint_id)
 
     plan = plan.strip().lower()
     invoice_limit = 0

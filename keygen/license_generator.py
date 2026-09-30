@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import base64
 import json
+import re
 import sys
 from datetime import date
 from pathlib import Path
@@ -24,6 +25,17 @@ CUSTOMERS_DIR = REPO_ROOT / "Customers"
 PRIVATE_KEY_PATH = KEYGEN_DIR / "private_key.pem"
 
 PLAN_CHOICES = ("monthly", "yearly", "quota", "onetime")
+FINGERPRINT_PATTERN = re.compile(r"^[0-9a-fA-F]{64}$")
+
+
+def normalize_fingerprint(value: str) -> str:
+    """Validate a fingerprint-tool SHA-256 value before any signing side effect."""
+    raw = str(value or "")
+    if not FINGERPRINT_PATTERN.fullmatch(raw):
+        raise ValueError(
+            "Fingerprint ID must be exactly 64 hexadecimal characters from the current fingerprint tool."
+        )
+    return raw.lower()
 
 
 def _load_private_key():
@@ -45,7 +57,7 @@ def build_license(
 ) -> dict:
     return {
         "customerId": customer_id,
-        "machineId": fingerprint.strip().lower(),
+        "machineId": normalize_fingerprint(fingerprint),
         "plan": plan,
         "issuedAt": issued_at or utc_now_iso(),
         "expiresAt": expires_at,
@@ -84,6 +96,7 @@ def generate_license_file(
     expires_at: str = "",
     output: str = "",
 ) -> tuple[dict, Path]:
+    fingerprint = normalize_fingerprint(fingerprint)
     plan = plan.strip().lower()
     if plan not in PLAN_CHOICES:
         raise ValueError(f"Invalid plan '{plan}'. Choose from: {', '.join(PLAN_CHOICES)}")

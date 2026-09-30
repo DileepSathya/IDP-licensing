@@ -1,82 +1,42 @@
-# Offline license system (Windows)
+# IDP Invoice license issuer
 
-Completely **offline** — no license server or internet required for validation.
+`IDP-lic_website` is the only application that generates and signs IDP Invoice
+licenses. Keep `keygen/private_key.pem` in this repository's secured deployment;
+never copy or bundle it into `IDP_2.0-INVOICE`.
 
-## One-time vendor setup
+## Machine fingerprint contract
 
-```powershell
-venv\Scripts\pip install cryptography
-venv\Scripts\python.exe keygen\generate_keys.py
-```
+Customers must use the current `fingerprint_tool.exe` distributed with
+`IDP_2.0-INVOICE`. It creates a lowercase 64-character SHA-256 fingerprint from
+exactly:
 
-This creates:
+- `Win32_Processor.ProcessorId`
+- The physical serial number of the disk containing the Windows system drive
 
-- `keygen/private_key.pem` — **never share, never commit, never bundle in exe**
-- `keygen/public_key.pem` — reference copy
-- `licensing/public_key_embed.py` — public key embedded in customer exes
+The canonical input is `CPU=<NORMALIZED_ID>|DISK=<NORMALIZED_SERIAL>`. The
+website receives and stores only its SHA-256 hash. It never receives raw CPU or
+disk identifiers.
 
-Rebuild portable app after generating keys:
+The website rejects blank, legacy, non-hexadecimal, or non-64-character
+fingerprints before loading the signing key, creating a license file, or writing
+a database record.
 
-```powershell
-.\packaging\build.ps1 -SkipMongoDB
-```
+## Customer flow
 
-Build customer fingerprint tool:
+1. Customer downloads the current fingerprint tool from the licence page.
+2. Customer runs it on the Windows machine that will run IDP Invoice.
+3. Customer pastes the displayed 64-character fingerprint into the licence page.
+4. The website signs the selected plan, expiry/quota, customer ID, issue time,
+   and fingerprint and downloads `license.lic`.
+5. Customer pastes the license key under **Settings → Licensing** in
+   `IDP_2.0-INVOICE`.
 
-```powershell
-venv\Scripts\python.exe -m PyInstaller packaging\fingerprint_tool.spec --distpath dist\IDP-Invoice --workpath build\pyinstaller --noconfirm
-```
+Changing the CPU or Windows system disk requires a new fingerprint and license.
+Network, VPN, and non-system-disk changes do not affect the fingerprint.
 
-Output: `dist\IDP-Invoice\fingerprint_tool.exe`
+## Migration
 
-## Issue a license (vendor)
-
-1. Customer runs `fingerprint_tool.exe` and sends you the fingerprint hash.
-2. You run:
-
-```powershell
-venv\Scripts\python.exe keygen\license_generator.py `
-  --customer ACME `
-  --fingerprint <hash-from-customer> `
-  --plan yearly `
-  --limit 500 `
-  --expires 2027-12-31
-```
-
-3. Send the generated `ACME.lic` file. Customer renames/copies it to **`license.lic`**.
-
-## Customer install layout
-
-```
-dist\IDP-Invoice\
-  Start IDP Invoice.exe
-  license.lic              ← required
-  invoice_count.enc        ← auto-created (encrypted quota counter)
-  idp-api\
-  idp-watcher\
-  ...
-```
-
-## Validation (automatic)
-
-On startup, these entry points call `validate_license()`:
-
-- `Start IDP Invoice.exe` (launcher)
-- `idp-api.exe`
-- `idp-watcher.exe`
-
-After each successful invoice stored to MongoDB, `increment_invoice_count()` runs.
-
-## Development bypass
-
-In `.env`:
-
-```env
-IDP_SKIP_LICENSE=1
-```
-
-## PyInstaller notes
-
-- Use **onedir** for main app (Paddle/OCR size) — already configured.
-- `license.lic` and `invoice_count.enc` live next to the exe (`sys.executable` parent), not inside `_internal`.
-- **Single-file** `Start IDP Invoice.exe` still resolves paths correctly for `license.lic`.
+Licenses created with the retired MAC/CPU-name/WMIC fingerprint algorithm are
+not accepted by the new Invoice application. Rebuild and publish the current
+fingerprint tool, collect a new fingerprint for every customer, and issue a new
+license from this website.
